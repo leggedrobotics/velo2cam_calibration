@@ -27,7 +27,7 @@
 #define velo2cam_utils_H
 
 #define PCL_NO_PRECOMPILE
-#define DEBUG 0
+#define DEBUG 1
 
 #include <pcl/search/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
@@ -40,11 +40,11 @@ using namespace std;
 
 namespace Velodyne {
 struct Point {
-  PCL_ADD_POINT4D;     // quad-word XYZ
-  float intensity;     ///< laser intensity reading
-  std::uint16_t ring;  ///< laser ring number
+  PCL_ADD_POINT4D;    // quad-word XYZ
+  float intensity;    ///< laser intensity reading
+  std::uint16_t ring; ///< laser ring number
   float range;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW  // ensure proper alignment
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW // ensure proper alignment
 } EIGEN_ALIGN16;
 
 void addRange(pcl::PointCloud<Velodyne::Point> &pc) {
@@ -82,7 +82,7 @@ void normalizeIntensity(pcl::PointCloud<Point> &pc, float minv, float maxv) {
         minv;
   }
 }
-}  // namespace Velodyne
+} // namespace Velodyne
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(Velodyne::Point,
                                   (float, x, x)(float, y, y)(float, z, z)(
@@ -104,15 +104,15 @@ void sortPatternCenters(pcl::PointCloud<pcl::PointXYZ>::Ptr pc,
   pcl::PointCloud<pcl::PointXYZ>::Ptr spherical_centers(
       new pcl::PointCloud<pcl::PointXYZ>());
   int top_pt = 0;
-  int index = 0;  // Auxiliar index to be used inside loop
+  int index = 0; // Auxiliar index to be used inside loop
   for (pcl::PointCloud<pcl::PointXYZ>::iterator pt = pc->points.begin();
        pt < pc->points.end(); pt++, index++) {
     pcl::PointXYZ spherical_center;
-    spherical_center.x = atan2(pt->y, pt->x);  // Horizontal
+    spherical_center.x = atan2(pt->y, pt->x); // Horizontal
     spherical_center.y =
-        atan2(sqrt(pt->x * pt->x + pt->y * pt->y), pt->z);  // Vertical
+        atan2(sqrt(pt->x * pt->x + pt->y * pt->y), pt->z); // Vertical
     spherical_center.z =
-        sqrt(pt->x * pt->x + pt->y * pt->y + pt->z * pt->z);  // Range
+        sqrt(pt->x * pt->x + pt->y * pt->y + pt->z * pt->z); // Range
     spherical_centers->push_back(spherical_center);
 
     if (spherical_center.y < spherical_centers->points[top_pt].y) {
@@ -133,7 +133,8 @@ void sortPatternCenters(pcl::PointCloud<pcl::PointXYZ>::Ptr pc,
   // Get indices of closest and furthest points
   int min_dist = (top_pt + 1) % 4, max_dist = top_pt;
   for (int i = 0; i < 4; i++) {
-    if (i == top_pt) continue;
+    if (i == top_pt)
+      continue;
     if (distances[i] > distances[max_dist]) {
       max_dist = i;
     }
@@ -143,7 +144,7 @@ void sortPatternCenters(pcl::PointCloud<pcl::PointXYZ>::Ptr pc,
   }
 
   // Second highest point shoud be the one whose distance is the median value
-  int top_pt2 = 6 - (top_pt + max_dist + min_dist);  // 0 + 1 + 2 + 3 = 6
+  int top_pt2 = 6 - (top_pt + max_dist + min_dist); // 0 + 1 + 2 + 3 = 6
 
   // Order upper row centers
   int lefttop_pt = top_pt;
@@ -176,10 +177,10 @@ void sortPatternCenters(pcl::PointCloud<pcl::PointXYZ>::Ptr pc,
   }
 
   // Fill vector with sorted centers
-  v[0] = pc->points[lefttop_pt];      // lt
-  v[1] = pc->points[righttop_pt];     // rt
-  v[2] = pc->points[rightbottom_pt];  // rb
-  v[3] = pc->points[leftbottom_pt];   // lb
+  v[0] = pc->points[lefttop_pt];     // lt
+  v[1] = pc->points[righttop_pt];    // rt
+  v[2] = pc->points[rightbottom_pt]; // rb
+  v[3] = pc->points[leftbottom_pt];  // lb
 }
 
 void colourCenters(const std::vector<pcl::PointXYZ> pc,
@@ -254,12 +255,12 @@ Eigen::Affine3f getRotationMatrix(Eigen::Vector3f source,
 }
 
 class Square {
- private:
+private:
   pcl::PointXYZ _center;
   std::vector<pcl::PointXYZ> _candidates;
   float _target_width, _target_height, _target_diagonal;
 
- public:
+public:
   Square(std::vector<pcl::PointXYZ> candidates, float width, float height) {
     _candidates = candidates;
     _target_width = width;
@@ -283,8 +284,8 @@ class Square {
                 pow(pt1.z - pt2.z, 2));
   }
 
-  float perimeter() {  // TODO: It is assumed that _candidates are ordered, it
-                       // shouldn't
+  float perimeter() { // TODO: It is assumed that _candidates are ordered, it
+                      // shouldn't
     float perimeter = 0;
     for (int i = 0; i < 4; ++i) {
       perimeter += distance(_candidates[i], _candidates[(i + 1) % 4]);
@@ -354,13 +355,13 @@ void comb(int N, int K, std::vector<std::vector<int>> &groups) {
     cout << N << " centers found. Iterating over " << n_permutations
          << " possible sets of candidates" << endl;
 
-  std::string bitmask(K, 1);  // K leading 1's
-  bitmask.resize(N, 0);       // N-K trailing 0's
+  std::string bitmask(K, 1); // K leading 1's
+  bitmask.resize(N, 0);      // N-K trailing 0's
 
   // print integers and permute bitmask
   do {
     std::vector<int> group;
-    for (int i = 0; i < N; ++i)  // [0..N-1] integers
+    for (int i = 0; i < N; ++i) // [0..N-1] integers
     {
       if (bitmask[i]) {
         group.push_back(i);
